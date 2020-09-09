@@ -1,15 +1,19 @@
 <template>
   <div class="virtaul-list" @scroll="handleScroll">
-    <div class="all-list">
+    <div class="all-list" :style ="{ paddingTop: `${startOffset}px`, paddingBottom: `${endOffset}px` }">
        <!-- :style ="{ paddingTop: `${startOffset}px`, paddingBottom: `${endOffset}px` }" -->
       <div v-for="item in visibleData" :key="item" class="list-wrap">
-        <div class="item">{{item}}</div>
+        <div class="item">
+          <div>{{item}}</div>
+          <div>{{new Date().getTime()}}</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+
 export default {
   name: 'virtaul-list',
   props: {
@@ -17,12 +21,13 @@ export default {
   },
   data() {
     return {
+      listScrollTop: 0,
       startIndex: 0,
-      endIndex: 20,
+      endIndex: 10,
       // startOffset:0,//列表的上偏移
       // endOffset: 0,// 列表的下偏移
-      visiableCount: 20, //每次渲染的个数
-      bufferSize: 10, //缓冲的个数
+      visiableCount: 12, //每次渲染的个数
+      bufferSize: 2, //缓冲的个数
       itemHeight: 40, //每个item的高度
       cache: [],//缓存以渲染元素
       anchorItem: {
@@ -37,7 +42,7 @@ export default {
   },
   created() {
     // setTimeout(() => {
-        for (let i = 1; i < 1000; i++) {
+        for (let i = 1; i < 10000; i++) {
         this.dataSource.push(i);
       }
     // },1000)
@@ -82,10 +87,6 @@ export default {
       });
     },
     updateIndex(scrollTop = 0) {
-      let all = document.querySelector(".all-list");
-      console.log(`scrollTop: ${this.getElementTop(all)}`);
-      scrollTop = scrollTop || 0
-      //用户正常滚动下，根据 scrollTop 找到新的锚点元素位置
       const anchorItem = this.cache.find(item => item.bottom >= scrollTop)
 
       this.anchorItem = {
@@ -95,23 +96,29 @@ export default {
       this.startIndex = this.anchorItem.index
       this.endIndex = this.startIndex + this.visibleCount
     },
-    handleScroll() {
-      const scrollTop = document.querySelector(".virtaul-list").scrollTop ;
-      // const scrollTop = document.documentElement.scrollTop
-      // if(scrollTop > this.anchorItem.bottom ) {
-        console.log(`scrolling-- scrollTop: ${scrollTop}`)
-        // this.updateIndex(scrollTop);
-        // this.cachePosition(document.querySelector(".all-list"), this.startIndex);
-        // this.updateVisibleData();
-      // }
+    handleScroll(e) {
+      const scrollTop = e.target.scrollTop ;
+      this.listScrollTop = scrollTop;
+      console.log(`scroll: `, e.target.scrollTop)
+      this.updateIndex(scrollTop)
+      let ele = document.querySelector(".list-wrap");
+      let top = this.getElementScrollTop(ele);
+      console.log(`scrollTop: `, top);
+      let start = scrollTop / this.itemHeight
+      let end = start + 12;
+      this.visibleData = this.dataSource.slice(start, end)
+    },
+    getElementScrollTop(element) {
+      return element.scrollTop
     }
   },
   computed: {
     startOffset() {
-      return this.anchorItem.top;
+      // return this.startIndex * this.itemHeight;
+      return this.listScrollTop
     },
     endOffset() {
-      return (this.dataSource.length - this.startIndex - this.bufferSize) * this.itemHeight
+      return this.dataSource.length * this.itemHeight - this. startOffset
     }
   }
 }
