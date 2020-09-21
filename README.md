@@ -1,4 +1,4 @@
-# virtaul-list
+# virtual-list
 
 ## Project setup
 ```
